@@ -1,0 +1,24 @@
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    maxconn 200
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log     global
+    option  dontlognull
+    timeout connect 5000ms
+    timeout client  50000ms
+    timeout server  50000ms
+
+frontend https-in
+    bind *:443 ssl crt /etc/letsencrypt/live/www.oneariik.tech/fullchain.pem key /etc/letsencrypt/live/www.oneariik.tech/privkey.pem
+    reqadd X-Forwarded-Proto:\ https
+    default_backend webservers
+
+backend webservers
+    balance roundrobin
+    server web-01 3.93.150.32:80 check
+    server web-02 3.82.149.138:80 check
