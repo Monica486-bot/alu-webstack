@@ -1,41 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Function to extract the A record of a subdomain
-get_subdomain_ip() {
-    subdomain=$1
-    domain=$2
-    dig +short "$subdomain.$domain" A
+# Function to display the subdomain info
+get_subdomain_info() {
+    local domain=$1
+    local subdomain=$2
+
+    # Run dig to get the A record for the subdomain
+    result=$(dig +short $subdomain.$domain)
+
+    if [ -z "$result" ]; then
+        echo "No record found for $subdomain.$domain"
+    else
+        echo "The subdomain $subdomain is a A record and points to $result"
+    fi
 }
 
-# Check if the domain parameter is provided
+# Check if the domain argument is provided
 if [ -z "$1" ]; then
-    echo "Please provide a domain name."
+    echo "Domain argument is required."
     exit 1
 fi
 
 domain=$1
 
-# List of subdomains to check
-subdomains=("www" "lb-01" "web-01" "web-02")
-
-# If subdomain is passed, only check that specific subdomain
+# If a specific subdomain is provided
 if [ -n "$2" ]; then
     subdomain=$2
-    ip=$(get_subdomain_ip "$subdomain" "$domain")
-    if [ -z "$ip" ]; then
-        echo "No record found for $subdomain.$domain"
-    else
-        echo "The subdomain $subdomain is a A record and points to $ip"
-    fi
-    exit 0
-fi
+    get_subdomain_info $domain $subdomain
+else
+    # Default subdomains to check
+    subdomains=("www" "lb-01" "web-01" "web-02")
 
-# Otherwise, loop through the predefined list of subdomains
-for subdomain in "${subdomains[@]}"; do
-    ip=$(get_subdomain_ip "$subdomain" "$domain")
-    if [ -z "$ip" ]; then
-        echo "No record found for $subdomain.$domain"
-    else
-        echo "The subdomain $subdomain is a A record and points to $ip"
-    fi
-done
+    # Loop through each subdomain and get the information
+    for subdomain in "${subdomains[@]}"; do
+        get_subdomain_info $domain $subdomain
+    done
+fi
