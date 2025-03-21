@@ -13,13 +13,16 @@ audit_subdomain() {
   local domain=$2
   
   # Run dig to get the A record for the subdomain
-  result=$(dig +short "$subdomain.$domain")
+  result=$(dig +short "$subdomain.$domain" 2>/dev/null | tr -d '[:space:]')
+  
+  # Debugging: Print raw result
+  echo "Raw result for $subdomain.$domain: $result"
   
   # Check if result is empty or not
   if [ -z "$result" ]; then
-    echo "No record found for $subdomain.$domain"
+    echo "No A record found for $subdomain.$domain"
   else
-    echo "The subdomain $subdomain is a A record and points to $result"
+    echo "The subdomain $subdomain is an A record and points to $result"
   fi
 }
 
