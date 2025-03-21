@@ -11,8 +11,11 @@ fi
 audit_subdomain() {
   local subdomain=$1
   local domain=$2
-  result=$(dig +short $subdomain.$domain)
   
+  # Run dig to get the A record for the subdomain
+  result=$(dig +short "$subdomain.$domain")
+  
+  # Check if result is empty or not
   if [ -z "$result" ]; then
     echo "No record found for $subdomain.$domain"
   else
@@ -22,10 +25,10 @@ audit_subdomain() {
 
 # If subdomain is provided, audit that subdomain
 if [ ! -z "$2" ]; then
-  audit_subdomain $2 $1
+  audit_subdomain "$2" "$1"
 else
   # Otherwise, audit the default subdomains
   for subdomain in "www" "lb-01" "web-01" "web-02"; do
-    audit_subdomain $subdomain $1
+    audit_subdomain "$subdomain" "$1"
   done
 fi
