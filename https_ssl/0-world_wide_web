@@ -7,31 +7,43 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+domain=$1
+
 # Function to audit DNS record of a subdomain
 audit_subdomain() {
   local subdomain=$1
   local domain=$2
+  result=$(dig +short "$subdomain.$domain")
   
-  # Run dig to get the A record for the subdomain
-  result=$(dig +short "$subdomain.$domain" 2>/dev/null | tr -d '[:space:]')
-  
-  # Debugging: Print raw result
-  echo "Raw result for $subdomain.$domain: $result"
-  
-  # Check if result is empty or not
   if [ -z "$result" ]; then
-    echo "No A record found for $subdomain.$domain"
+    echo "No record found for $subdomain.$domain"
   else
-    echo "The subdomain $subdomain is an A record and points to $result"
+    echo "The subdomain $subdomain is a A record and points to $result"
   fi
 }
 
 # If subdomain is provided, audit that subdomain
-if [ ! -z "$2" ]; then
-  audit_subdomain "$2" "$1"
+if [ -n "$2" ]; then
+  audit_subdomain "$2" "$domain"
 else
   # Otherwise, audit the default subdomains
-  for subdomain in "www" "lb-01" "web-01" "web-02"; do
-    audit_subdomain "$subdomain" "$1"
+  declare -A subdomains=(
+    ["www"]="54.205.118.206"
+    ["lb-01"]="54.205.118.206"
+    ["web-01"]="3.93.150.32"
+    ["web-02"]="3.82.149.138"
+  )
+
+  for subdomain in "${!subdomains[@]}"; do
+    expected_ip=${subdomains[$subdomain]}
+    result=$(dig +short "$subdomain.$domain")
+    
+    if [ -z "$result" ]; then
+      echo "No record found for $subdomain.$domain"
+    elif [ "$result" != "$expected_ip" ]; then
+      echo "The subdomain $subdomain is a A record and points to $result (expected: $expected_ip)"
+    else
+      echo "The subdomain $subdomain is a A record and points to $result"
+    fi
   done
 fi
