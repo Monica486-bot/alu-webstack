@@ -1,0 +1,32 @@
+# Global settings
+global
+    log 127.0.0.1   local0
+    maxconn 200
+
+# Default settings
+defaults
+    log     global
+    option  httplog
+    timeout connect 5000ms
+    timeout client  50000ms
+    timeout server  50000ms
+
+# Redirect HTTP to HTTPS
+frontend http-in
+    bind *:80
+    mode http
+    option httplog
+    redirect scheme https code 301 if !{ ssl_fc }
+
+# Handle HTTPS traffic
+frontend https-in
+    bind *:443 ssl crt /etc/letsencrypt/live/www.monicaakoi.tech/fullchain.pem
+    mode http
+    option httplog
+    default_backend servers
+
+# Backends
+backend servers
+    balance roundrobin
+    server web1 3.93.150.32:80 check
+    server web2 3.82.149.138:80 check
