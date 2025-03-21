@@ -20,31 +20,35 @@ audit_subdomain() {
     echo "No A record found for $sub.$dom"
   else
     echo "The subdomain $sub is a A record and points to $result"
-    
-    # Additional validation for specific subdomains
-    case $sub in
-      www)
-        if [ "$result" == "54.210.47.110" ]; then
-          echo "Your subdomain www points to your lb-01 server IP"
-        fi
-        ;;
-      web-01)
-        if [ "$result" == "34.198.248.145" ]; then
-          echo "Your subdomain web-01 points to your web-01 server IP"
-        fi
-        ;;
-      web-02)
-        if [ "$result" == "54.89.38.100" ]; then
-          echo "Your subdomain web-02 points to your web-02 server IP"
-        fi
-        ;;
-    esac
+  fi
+}
+
+# Function to validate specific subdomain IPs
+validate_subdomain_ip() {
+  local sub=$1
+  local expected_ip=$2
+  result=$(dig +short "$sub.$domain" A)
+  
+  if [ "$result" == "$expected_ip" ]; then
+    echo "Your subdomain $sub points to your $sub server IP"
   fi
 }
 
 # If subdomain is provided, audit that subdomain
 if [ -n "$subdomain" ]; then
   audit_subdomain "$subdomain" "$domain"
+  # Validate specific subdomain IPs
+  case $subdomain in
+    www)
+      validate_subdomain_ip "www" "54.210.47.110"
+      ;;
+    web-01)
+      validate_subdomain_ip "web-01" "34.198.248.145"
+      ;;
+    web-02)
+      validate_subdomain_ip "web-02" "54.89.38.100"
+      ;;
+  esac
 else
   # Otherwise, audit the default subdomains in a specific order
   for sub in www lb-01 web-01 web-02; do
