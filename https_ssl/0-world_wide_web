@@ -1,31 +1,41 @@
-#!/usr/bin/env bash
-# This script checks the DNS records for subdomains and displays information about them
+#!/bin/bash
 
-# Check if domain is provided
-if [ -z "$1" ]; then
-  echo "You must provide a domain."
-  exit 1
-fi
-
-# Function to audit DNS record of a subdomain
-audit_subdomain() {
-  local subdomain=$1
-  local domain=$2
-  result=$(dig +short $subdomain.$domain)
-  
-  if [ -z "$result" ]; then
-    echo "No record found for $subdomain.$domain"
-  else
-    echo "The subdomain $subdomain is a A record and points to $result"
-  fi
+# Function to extract the A record of a subdomain
+get_subdomain_ip() {
+    subdomain=$1
+    domain=$2
+    dig +short "$subdomain.$domain" A
 }
 
-# If subdomain is provided, audit that subdomain
-if [ ! -z "$2" ]; then
-  audit_subdomain $2 $1
-else
-  # Otherwise, audit the default subdomains
-  for subdomain in "www" "lb-01" "web-01" "web-02"; do
-    audit_subdomain $subdomain $1
-  done
+# Check if the domain parameter is provided
+if [ -z "$1" ]; then
+    echo "Please provide a domain name."
+    exit 1
 fi
+
+domain=$1
+
+# List of subdomains to check
+subdomains=("www" "lb-01" "web-01" "web-02")
+
+# If subdomain is passed, only check that specific subdomain
+if [ -n "$2" ]; then
+    subdomain=$2
+    ip=$(get_subdomain_ip "$subdomain" "$domain")
+    if [ -z "$ip" ]; then
+        echo "No record found for $subdomain.$domain"
+    else
+        echo "The subdomain $subdomain is a A record and points to $ip"
+    fi
+    exit 0
+fi
+
+# Otherwise, loop through the predefined list of subdomains
+for subdomain in "${subdomains[@]}"; do
+    ip=$(get_subdomain_ip "$subdomain" "$domain")
+    if [ -z "$ip" ]; then
+        echo "No record found for $subdomain.$domain"
+    else
+        echo "The subdomain $subdomain is a A record and points to $ip"
+    fi
+done
