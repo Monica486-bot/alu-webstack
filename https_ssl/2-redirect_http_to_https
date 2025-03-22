@@ -1,32 +1,32 @@
-# Global settings
-global
-    log 127.0.0.1   local0
-    maxconn 200
+#!/usr/bin/env bash
+# This script checks DNS records for a domain or a specific subdomain
 
-# Default settings
-defaults
-    log     global
-    option  httplog
-    timeout connect 5000ms
-    timeout client  50000ms
-    timeout server  50000ms
+# Function to check the DNS record for a given subdomain
+check_dns_record() {
+    local domain=$1
+    local subdomain=$2
+    local result
+    result=$(dig +short "$subdomain.$domain")
+    
+    if [[ -z "$result" ]]; then
+        echo "The subdomain $subdomain does not exist or could not be found."
+    else
+        echo "The subdomain $subdomain is a A record and points to $result"
+    fi
+}
 
-# Redirect HTTP to HTTPS
-frontend http-in
-    bind *:80
-    mode http
-    option httplog
-    redirect scheme https code 301 if !{ ssl_fc }
+# Main script logic
+domain=$1
+subdomain=$2
 
-# Handle HTTPS traffic
-frontend https-in
-    bind *:443 ssl crt /etc/letsencrypt/live/www.monicaakoi.tech/fullchain.pem
-    mode http
-    option httplog
-    default_backend servers
+# If only the domain is provided, check for default subdomains
+if [ -z "$subdomain" ]; then
+    check_dns_record "$domain" "www"
+    check_dns_record "$domain" "lb-01"
+    check_dns_record "$domain" "web-01"
+    check_dns_record "$domain" "web-02"
+else
+    # If subdomain is provided, check for that specific subdomain
+    check_dns_record "$domain" "$subdomain"
+fi
 
-# Backends
-backend servers
-    balance roundrobin
-    server web1 3.93.150.32:80 check
-    server web2 3.82.149.138:80 check
