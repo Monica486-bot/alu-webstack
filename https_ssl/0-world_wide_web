@@ -1,34 +1,24 @@
 #!/usr/bin/env bash
-# Script to check DNS A records for given domain and subdomains
+# This script retrieves A records of a domain's subdomains using dig
 
-# Function to check a subdomain
-check_subdomain() {
-    subdomain=$1
-    domain=$2
-    result=$(dig +short "$subdomain.$domain")
+domain=$1
+subdomain=$2
+
+query_dns() {
+    local sub=$1
+    local result=$(dig +short "$sub.$domain")
 
     if [[ -n "$result" ]]; then
-        echo "The subdomain $subdomain is an A record and points to $result"
-    else
-        echo "No A record found for $subdomain.$domain"
+        echo "The subdomain $sub is a A record and points to $result"
     fi
 }
 
-# Validate arguments
-if [[ -z "$1" ]]; then
-    echo "Usage: $0 <domain> [subdomain]"
-    exit 1
-fi
-
-DOMAIN=$1
-SUBDOMAIN=$2
-
-# If a specific subdomain is provided, check only that
-if [[ -n "$SUBDOMAIN" ]]; then
-    check_subdomain "$SUBDOMAIN" "$DOMAIN"
-else
-    # Check all required subdomains
+if [[ -z "$subdomain" ]]; then
     for sub in www lb-01 web-01 web-02; do
-        check_subdomain "$sub" "$DOMAIN"
+        query_dns "$sub"
     done
+else
+    query_dns "$subdomain"
 fi
+
+echo ""  # Add a newline at the end for formatting
