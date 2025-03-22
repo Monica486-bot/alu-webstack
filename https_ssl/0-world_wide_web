@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# This script checks the DNS A records for specific subdomains of a given domain
 
 # Function to display subdomain record
 display_subdomain_info() {
