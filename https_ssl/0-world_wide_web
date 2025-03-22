@@ -23,9 +23,7 @@ audit_subdomain() {
   local domain=$2
   local full_domain="${subdomain}.${domain}"
   
-  echo "Debug: Querying $full_domain"
   result=$(dig +short "$full_domain")
-  echo "Debug: Result for $full_domain is $result"
   
   if [ -z "$result" ]; then
     echo "The subdomain $subdomain does not have a DNS record."
