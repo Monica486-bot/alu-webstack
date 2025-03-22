@@ -1,24 +1,32 @@
 #!/usr/bin/env bash
-# This script retrieves A records of a domain's subdomains using dig
+# This script audits the subdomains of a given domain and displays A record information
 
-domain=$1
-subdomain=$2
-
-query_dns() {
-    local sub=$1
-    local result=$(dig +short "$sub.$domain")
-
-    if [[ -n "$result" ]]; then
-        echo "The subdomain $sub is a A record and points to $result"
+# Function to display DNS info for a given subdomain
+audit_subdomain() {
+    local domain=$1
+    local subdomain=$2
+    # Get the A record for the subdomain
+    ip_address=$(dig +short "$subdomain.$domain")
+    
+    # Check if the A record exists
+    if [ -z "$ip_address" ]; then
+        echo "The subdomain $subdomain does not have an A record"
+    else
+        echo "The subdomain $subdomain is an A record and points to $ip_address"
+        echo "Your subdomain $subdomain points to your $subdomain server IP"
     fi
 }
 
-if [[ -z "$subdomain" ]]; then
-    for sub in www lb-01 web-01 web-02; do
-        query_dns "$sub"
-    done
-else
-    query_dns "$subdomain"
-fi
+# Main logic
+domain=$1
+subdomain=$2
 
-echo ""  # Add a newline at the end for formatting
+# If subdomain is provided, only check that subdomain
+if [ -n "$subdomain" ]; then
+    audit_subdomain "$domain" "$subdomain"
+else
+    # Otherwise, check all subdomains
+    for sub in www lb-01 web-01 web-02; do
+        audit_subdomain "$domain" "$sub"
+    done
+fi
