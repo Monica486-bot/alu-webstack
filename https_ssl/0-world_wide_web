@@ -10,7 +10,7 @@ fi
 # Check if domain is provided
 if [ -z "$1" ]; then
   echo "Usage: $0 domain [subdomain]"
-  echo "Example: $0 monicaakoi.tech web-01"
+  echo "Example: $0 holberton.online web-01"
   exit 1
 fi
 
@@ -23,14 +23,14 @@ audit_subdomain() {
   local domain=$2
   local full_domain="${subdomain}.${domain}"
   
-  # Query DNS record and extract the ANSWER SECTION
-  result=$(dig "$full_domain" | grep -A1 'ANSWER SECTION:')
+  # Query DNS record and extract the IP address
+  result=$(dig +short "$full_domain")
   
   # Display result in the required format
   if [ -z "$result" ]; then
     echo "The subdomain $subdomain does not have a DNS record."
   else
-    echo "$result"
+    echo "The subdomain $subdomain is a A record and points to $result"
   fi
 }
 
