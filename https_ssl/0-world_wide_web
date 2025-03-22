@@ -1,57 +1,34 @@
 #!/usr/bin/env bash
-# This script checks the DNS records for subdomains and displays information about them
+# Script to check DNS A records for given domain and subdomains
 
-# Check if domain is provided
-if [ -z "$1" ]; then
-  echo "Usage: $0 <domain> [subdomain]"
-  exit 1
+# Function to check a subdomain
+check_subdomain() {
+    subdomain=$1
+    domain=$2
+    result=$(dig +short "$subdomain.$domain")
+
+    if [[ -n "$result" ]]; then
+        echo "The subdomain $subdomain is an A record and points to $result"
+    else
+        echo "No A record found for $subdomain.$domain"
+    fi
+}
+
+# Validate arguments
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 <domain> [subdomain]"
+    exit 1
 fi
 
-domain=$1
-subdomain=$2
+DOMAIN=$1
+SUBDOMAIN=$2
 
-# Function to audit DNS record of a subdomain
-audit_subdomain() {
-  local sub=$1
-  local dom=$2
-  result=$(dig +short "$sub.$dom" A)
-  
-  if [ -z "$result" ]; then
-    echo "No A record found for $sub.$dom"
-  else
-    echo "The subdomain $sub is a A record and points to $result"
-  fi
-}
-
-# Function to validate specific subdomain IPs
-validate_subdomain_ip() {
-  local sub=$1
-  local expected_ip=$2
-  result=$(dig +short "$sub.$domain" A)
-  
-  if [ "$result" == "$expected_ip" ]; then
-    echo "Your subdomain $sub points to your $sub server IP"
-  fi
-}
-
-# If subdomain is provided, audit that subdomain
-if [ -n "$subdomain" ]; then
-  audit_subdomain "$subdomain" "$domain"
-  # Validate specific subdomain IPs
-  case $subdomain in
-    www)
-      validate_subdomain_ip "www" "54.210.47.110"
-      ;;
-    web-01)
-      validate_subdomain_ip "web-01" "34.198.248.145"
-      ;;
-    web-02)
-      validate_subdomain_ip "web-02" "54.89.38.100"
-      ;;
-  esac
+# If a specific subdomain is provided, check only that
+if [[ -n "$SUBDOMAIN" ]]; then
+    check_subdomain "$SUBDOMAIN" "$DOMAIN"
 else
-  # Otherwise, audit the default subdomains in a specific order
-  for sub in www lb-01 web-01 web-02; do
-    audit_subdomain "$sub" "$domain"
-  done
+    # Check all required subdomains
+    for sub in www lb-01 web-01 web-02; do
+        check_subdomain "$sub" "$DOMAIN"
+    done
 fi
