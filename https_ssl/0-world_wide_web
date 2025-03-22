@@ -12,11 +12,13 @@ audit_subdomain() {
   local subdomain=$1
   local domain=$2
   result=$(dig +short $subdomain.$domain)
-  
+
   if [ -z "$result" ]; then
     echo "No record found for $subdomain.$domain"
   else
+    # Print the result in the expected format
     echo "The subdomain $subdomain is a A record and points to $result"
+    echo "Your subdomain $subdomain points to your $subdomain server IP"
   fi
 }
 
